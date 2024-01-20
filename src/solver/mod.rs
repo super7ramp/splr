@@ -132,23 +132,26 @@ impl<V: AsRef<[i32]>> TryFrom<Vec<V>> for Certificate {
 ///    * `None` -- unsatisfiable anymore
 /// * Some internal error causes panic.
 #[cfg(feature = "incremental_solver")]
-pub struct SolverIter<'a> {
-    solver: &'a mut Solver,
+pub struct SolverIter {
+    solver: Solver,
     refute: Option<Vec<i32>>,
 }
 
 #[cfg(feature = "incremental_solver")]
-impl Solver {
+impl IntoIterator for Solver {
+    type Item = Vec<i32>;
+    type IntoIter = SolverIter;
+
     /// return an iterator on Solver. **Requires 'incremental_solver' feature**
     ///```ignore
     ///use splr::Solver;
     ///use std::path::Path;
     ///
-    ///for v in Solver::try_from(Path::new("cnfs/sample.cnf")).expect("panic").iter() {
+    ///for v in Solver::try_from(Path::new("cnfs/sample.cnf")).expect("panic").into_iter() {
     ///    println!(" - answer: {:?}", v);
     ///}
     ///```
-    pub fn iter(&mut self) -> SolverIter {
+    fn into_iter(self) -> Self::IntoIter {
         SolverIter {
             solver: self,
             refute: None,
@@ -157,7 +160,7 @@ impl Solver {
 }
 
 #[cfg(feature = "incremental_solver")]
-impl<'a> Iterator for SolverIter<'a> {
+impl Iterator for SolverIter {
     type Item = Vec<i32>;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(ref v) = self.refute {
