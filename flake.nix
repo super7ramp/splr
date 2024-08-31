@@ -1,39 +1,31 @@
 {
   description = "A modern SAT solver in Rust";
-  inputs = {
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nixpkgs.url = github:NixOS/nixpkgs;
-  };
-  outputs = { self, nixpkgs, crane }:
+  inputs.nixpkgs.url = github:NixOS/nixpkgs;
+  outputs = { self, nixpkgs }:
   {
     packages = builtins.listToAttrs
       (map
         (system:
           with import nixpkgs { system = "${system}"; };
-          let
-            craneLib = crane.lib.${system};
-          in
-            {
-              name = system;
-              value = {
-                default = craneLib.buildPackage {
-                  # name = "splr-${version}";
-                  # pname = "splr";
-                  # version = "0.17.1-20240106";
-                  src = craneLib.cleanCargoSource (craneLib.path ./.);
-                  buildInputs = [cargo rustc binutils ]
-                   ++ lib.optional stdenv.isDarwin [ libiconv ];
-                  doCheck = false;
-                };
-                devShell = mkShell {
-                  inputsFrom = buildins.attrValues self.packages.${system};
-                  nativeBuildInputs = [ clippy rust-analyzer rustfmt ];
-                };
-              };
-            }
+          {
+            name = system;
+            value = {
+               default =
+                 rustPlatform.buildRustPackage rec {
+                   version = "0.17.3-20240326";
+                   name = "splr-${version}";
+                   pname = "splr";
+                   src = self;
+                   cargoHash = "sha256-inZ6gvvof3YwUeplHpAMme8AI+Y7B2R/uT1KojSEHxE=";
+                   buildInputs = rustc.buildInputs ++ lib.optional stdenv.isDarwin [ libiconv ];
+                   buildPhase = "cargo build --release";
+                   installPhase = ''
+                     mkdir -p $out/bin;
+                     install -t $out/bin target/release/splr target/release/dmcr
+                   '';
+                 };
+            };
+          }
         )
       [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ]
     );

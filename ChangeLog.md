@@ -1,3 +1,11 @@
+## 0.17.3, 2024-03-26
+
+- resolve #232, an incorrect debug assertion
+
+## 0.17.2, 2024-02-04
+
+- Add feature `platform_wasm`
+
 ## 0.17.1, 2023-07-07
 
 - fix compilation errors with feature 'no_IO'
